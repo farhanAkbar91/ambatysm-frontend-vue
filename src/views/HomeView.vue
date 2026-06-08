@@ -66,7 +66,7 @@ const products = ref([])
 const loading = ref(true)
 
 const slides = [
-  { title: 'First slide label', subtitle: 'Some representative placeholder content for the first slide.' },
+  { title: 'Koleksi Musim Panas', subtitle: 'Temukan gaya terbaikmu dengan koleksi terbaru kami.' },
   { title: 'Second slide label', subtitle: 'Some representative placeholder content for the second slide.' },
   { title: 'Third slide label', subtitle: 'Some representative placeholder content for the third slide.' },
 ]

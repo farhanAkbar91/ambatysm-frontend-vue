@@ -13,10 +13,13 @@ const routes = [
   { path: '/payment', component: () => import('../views/PaymentView.vue'), meta: { requiresAuth: true } },
   { path: '/payment-success', component: () => import('../views/PaymentSuccessView.vue') },
   { path: '/pesanan', component: () => import('../views/PesananView.vue'), meta: { requiresAuth: true } },
+  { path: '/pesanan/:id', component: () => import('../views/OrderDetailView.vue'), meta: { requiresAuth: true } },
   { path: '/profil', component: () => import('../views/ProfilView.vue'), meta: { requiresAuth: true } },
+  { path: '/admin/dashboard', component: () => import('../views/admin/DashboardAdminView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin', component: () => import('../views/admin/HomeAdminView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/tambah-produk', component: () => import('../views/admin/TambahProdukView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/pesanan', component: () => import('../views/admin/PesananAdminView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/admin/pesanan/:id', component: () => import('../views/admin/OrderDetailAdminView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/admin/profil', component: () => import('../views/admin/ProfilAdminView.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 

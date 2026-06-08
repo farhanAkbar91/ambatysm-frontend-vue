@@ -63,6 +63,14 @@
                   <div class="card-body text-center mt-2 d-flex flex-column" style="padding:10px 0;">
                     <p class="card-title text-uppercase font-b612 text-muted mb-1" style="font-size:11px;letter-spacing:1px;">AMBATYSM</p>
                     <p class="card-text text-uppercase teks-judul" style="font-size:13px;font-weight:500;">{{ product.name }}</p>
+                    <div class="d-flex align-items-center justify-content-center gap-1 mb-2">
+                      <div class="text-warning" style="font-size: 11px;">
+                        <i v-for="star in 5" :key="star" :class="getStarClass(product.reviews_avg_rating, star)"></i>
+                      </div>
+                      <span class="text-muted" style="font-size: 11px;">
+                        ({{ product.reviews_count || 0 }})
+                      </span>
+                    </div>
                     <p class="card-text teks-harga mt-auto" style="font-size:13px;">{{ formatRupiah(product.price) }}</p>
                   </div>
                 </div>
@@ -144,4 +152,12 @@ onMounted(async () => {
 })
 
 watch(typeParam, () => { selectedSize.value = null; selectedColor.value = null })
+
+function getStarClass(rating, starIndex) {
+  const r = parseFloat(rating) || 0;
+  const diff = r - (starIndex - 1);
+  if (diff >= 1) return 'bi bi-star-fill text-warning';
+  if (diff >= 0.5) return 'bi bi-star-half text-warning';
+  return 'bi bi-star text-muted';
+}
 </script>

@@ -21,7 +21,14 @@
           <img :src="getImageUrl(item.product.image)" :alt="item.product.name">
         </div>
         <div class="cart-item__details">
-          <p class="cart-item__name" style="font-size:14px;font-weight:600;">{{ item.product.name }}</p>
+          <p class="cart-item__name mb-1" style="font-size:14px;font-weight:600;">{{ item.product.name }}</p>
+          <div v-if="item.size || item.color" class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:#666;">
+            <span v-if="item.size">Size: {{ item.size }}</span>
+            <span v-if="item.size && item.color">|</span>
+            <span v-if="item.color" class="d-flex align-items-center gap-1">
+              Warna: <span :style="{ backgroundColor: item.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+            </span>
+          </div>
           <p class="cart-item__price">{{ formatRupiah(item.product.price) }}</p>
           <button class="btn btn-sm text-danger mt-2 p-0" @click="removeItem(item.id, i)" style="font-size:12px;font-family:'B612',sans-serif;">
             <i class="bi bi-trash"></i> Hapus

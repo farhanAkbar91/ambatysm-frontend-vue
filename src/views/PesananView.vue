@@ -1,13 +1,13 @@
 <template>
   <div class="bg-light">
-    <nav class="navbar navbar-expand-lg bg-white py-3 sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
       <div class="container-fluid d-flex justify-content-center">
         <router-link to="/" class="brand-logo-ambatysm position-absolute top-50 start-50 translate-middle">AMBATYSM</router-link>
       </div>
     </nav>
 
     <main class="container mt-0 p-0" style="max-width:600px;">
-      <ul class="nav nav-pills nav-fill bg-white border-bottom sticky-top font-b612" style="top:70px;z-index:99;">
+      <ul class="nav nav-pills nav-fill bg-white border-bottom font-b612">
         <li class="nav-item">
           <button :class="['nav-link rounded-0 text-dark py-3 fw-bold', { active: tab === 'proses' }]" style="font-size:15px;" @click="tab = 'proses'">Diproses</button>
         </li>

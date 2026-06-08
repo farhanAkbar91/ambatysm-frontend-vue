@@ -50,38 +50,46 @@
         <!-- Right: Product Info -->
         <div class="col-md-5">
           <h1 class="text-uppercase" style="font-family:'B612',sans-serif;font-size:20px;font-weight:400;color:#444;margin-bottom:20px;letter-spacing:1px;">{{ product.name }}</h1>
-          <p style="font-size:15px;color:#777;margin-bottom:30px;">{{ formatRupiah(product.price) }}</p>
+          <p style="font-size:15px;color:#777;margin-bottom:15px;">{{ formatRupiah(product.price) }}</p>
+          <div class="d-flex align-items-center gap-2 mb-4">
+            <div class="text-warning" style="font-size: 14px;">
+              <i v-for="star in 5" :key="star" :class="getStarClass(product.reviews_avg_rating, star)"></i>
+            </div>
+            <span class="fw-bold text-dark font-b612" style="font-size: 13px;">{{ formatRating(product.reviews_avg_rating) }} / 5.0</span>
+            <span class="text-muted font-b612" style="font-size: 12px;">| {{ product.reviews_count || 0 }} Ulasan</span>
+          </div>
 
           <!-- Colors -->
           <div class="mb-4">
-            <p style="font-size:13px;color:#555;margin-bottom:10px;">Colors</p>
+            <p style="font-size:13px;color:#555;margin-bottom:10px;">Pilihan Warna:</p>
             <div class="d-flex gap-2 flex-wrap">
-              <div
+              <button
                 v-for="c in swatchColors"
                 :key="c"
-                class="filter-color-swatch"
-                :class="{ active: activeColor === c }"
-                :style="{ backgroundColor: c, width:'22px', height:'22px', borderRadius:'50%', border:'1px solid #ccc', cursor:'pointer', boxShadow: activeColor === c ? '0 0 0 2px #fff, 0 0 0 3px #111' : '' }"
-                @click="activeColor = c"
-              ></div>
+                class="btn btn-outline-secondary rounded-0 font-b612 text-uppercase"
+                :class="activeColor === c ? 'border-dark text-dark fw-bold' : 'text-muted'"
+                :style="{ padding: '6px 15px', fontSize:'13px', borderColor: activeColor === c ? '#222' : '#ddd' }"
+                @click="selectColor(c)"
+              >{{ c }}</button>
             </div>
           </div>
 
           <!-- Sizes -->
           <div class="mb-4 pt-2">
             <div class="d-flex justify-content-between align-items-end mb-2">
-              <span style="font-size:13px;color:#555;">Size:</span>
+              <span style="font-size:13px;color:#555;">Pilihan Ukuran:</span>
               <a href="#" class="text-muted text-decoration-underline" style="font-size:11px;">Panduan Size</a>
             </div>
             <div class="d-flex gap-2 flex-wrap">
               <button
-                v-for="sz in ['S','M','L','XL','XXL']"
+                v-for="sz in availableSizes"
                 :key="sz"
                 class="btn btn-outline-secondary rounded-0 font-b612"
                 :class="activeSize === sz ? 'border-dark text-dark fw-bold' : 'text-muted'"
                 :style="{ width:'45px', height:'40px', fontSize:'13px', borderColor: activeSize === sz ? '#222' : '#ddd' }"
                 @click="activeSize = sz"
               >{{ sz }}</button>
+              <div v-if="!availableSizes.length" class="text-danger small font-b612 mt-1">Stok untuk warna ini habis</div>
             </div>
           </div>
 
@@ -116,6 +124,39 @@
             </div>
           </div>
         </div>
+
+        <!-- Customer Reviews List -->
+        <div class="mt-5 border-top pt-5">
+          <h3 class="text-uppercase font-b612 mb-4" style="font-size: 16px; letter-spacing: 1.5px; font-weight: 700; color: #111;">Ulasan Pelanggan</h3>
+          
+          <div v-if="!product.reviews || product.reviews.length === 0" class="text-muted py-4 font-b612 text-center" style="font-size: 13px;">
+            <i class="bi bi-chat-left-text d-block fs-3 mb-2 text-secondary"></i>
+            Belum ada ulasan untuk produk ini.
+          </div>
+          
+          <div v-else class="row">
+            <div class="col-12">
+              <div class="row row-cols-1 row-cols-md-2 g-3">
+                <div v-for="review in product.reviews" :key="review.id" class="col">
+                  <div class="card h-100 border-0 bg-light p-3 shadow-sm" style="border-radius: 0;">
+                    <div class="d-flex justify-content-between align-items-center mb-2 font-b612">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-dark" style="font-size: 13px;">{{ review.user ? review.user.name : 'Pelanggan' }}</span>
+                        <span class="text-muted" style="font-size: 10px;">{{ formatDate(review.created_at) }}</span>
+                      </div>
+                      <div class="text-warning" style="font-size: 11px;">
+                        <i v-for="n in 5" :key="n" class="bi" :class="n <= review.rating ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
+                      </div>
+                    </div>
+                    <p class="mb-0 text-secondary font-b612" style="font-size: 12px; line-height: 1.6; font-style: italic;">
+                      "{{ review.comment || 'Tidak ada komentar.' }}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -141,11 +182,35 @@ const product = ref(null)
 const loading = ref(true)
 const error = ref(false)
 const activeImg = ref(0)
-const activeColor = ref('#000000')
-const activeSize = ref('S')
+const activeColor = ref('')
+const activeSize = ref('')
 const qty = ref(1)
 
-const swatchColors = ['#000', '#1abc9c', '#3498db', '#e74c3c', '#7f8c8d', '#f5deb3', '#fff']
+const swatchColors = computed(() => {
+  if (!product.value || !product.value.stocks) return []
+  const colors = product.value.stocks.map(s => s.color)
+  return [...new Set(colors)]
+})
+
+const availableSizes = computed(() => {
+  if (!product.value || !product.value.stocks) return []
+  const sizes = product.value.stocks
+    .filter(s => s.color === activeColor.value)
+    .map(s => s.size)
+  return [...new Set(sizes)]
+})
+
+function selectColor(colorName) {
+  activeColor.value = colorName
+  const sizesForColor = product.value.stocks
+    .filter(s => s.color === colorName && s.stock > 0)
+    .map(s => s.size)
+  if (sizesForColor.length) {
+    activeSize.value = sizesForColor[0]
+  } else {
+    activeSize.value = ''
+  }
+}
 
 const images = computed(() => {
   if (!product.value) return []
@@ -166,7 +231,15 @@ onMounted(async () => {
   const id = route.params.id
   try {
     product.value = await apiGetProductDetail(id)
-    if (!product.value) error.value = true
+    if (!product.value) {
+      error.value = true
+    } else {
+      if (product.value.stocks && product.value.stocks.length) {
+        const firstStockWithQty = product.value.stocks.find(s => s.stock > 0) || product.value.stocks[0]
+        activeColor.value = firstStockWithQty.color
+        activeSize.value = firstStockWithQty.size
+      }
+    }
   } catch {
     error.value = true
   } finally {
@@ -179,15 +252,38 @@ async function addToCart() {
     router.push('/login')
     return
   }
+  if (!activeSize.value || !activeColor.value) {
+    toast.error('Pilihan Kosong', 'Harap pilih ukuran dan warna terlebih dahulu.')
+    return
+  }
   try {
     const res = await fetch(`${BASE_URL}/cart/add`, {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-      body: JSON.stringify({ product_id: product.value.id, quantity: qty.value })
+      body: JSON.stringify({ product_id: product.value.id, quantity: qty.value, size: activeSize.value, color: activeColor.value })
     })
     const result = await res.json()
     if (res.ok) toast.success('Berhasil', 'Produk ditambahkan ke keranjang!')
     else toast.error('Gagal', result.message || 'Stok mungkin tidak mencukupi.')
   } catch { toast.error('Error', 'Terjadi kesalahan koneksi.') }
+}
+
+function getStarClass(rating, starIndex) {
+  const r = parseFloat(rating) || 0;
+  const diff = r - (starIndex - 1);
+  if (diff >= 1) return 'bi bi-star-fill text-warning';
+  if (diff >= 0.5) return 'bi bi-star-half text-warning';
+  return 'bi bi-star text-muted';
+}
+
+function formatRating(rating) {
+  const r = parseFloat(rating) || 0;
+  return r > 0 ? r.toFixed(1) : '0';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 </script>

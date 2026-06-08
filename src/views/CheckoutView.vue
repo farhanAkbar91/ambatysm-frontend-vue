@@ -35,6 +35,13 @@
             <img :src="getImageUrl(item.product.image)" style="width:60px;height:75px;object-fit:cover;border-radius:6px;">
             <div class="flex-grow-1">
               <p class="mb-1 fw-bold" style="font-size:14px;">{{ item.product.name }}</p>
+              <div v-if="item.size || item.color" class="d-flex align-items-center gap-2 mb-1" style="font-size:12px;color:#666;">
+                <span v-if="item.size">Size: {{ item.size }}</span>
+                <span v-if="item.size && item.color">|</span>
+                <span v-if="item.color" class="d-flex align-items-center gap-1">
+                  Warna: <span :style="{ backgroundColor: item.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+                </span>
+              </div>
               <p class="mb-0 text-muted" style="font-size:13px;">{{ formatRupiah(item.product.price) }} x {{ item.quantity }}</p>
             </div>
             <div class="fw-bold" style="font-size:14px;">{{ formatRupiah(item.product.price * item.quantity) }}</div>
