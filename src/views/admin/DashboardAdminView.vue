@@ -180,7 +180,7 @@ import { useRouter } from 'vue-router'
 import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
-import { BASE_URL, ASSET_URL } from '@/composables/api'
+import { BASE_URL, ASSET_URL } from '../../composables/api'
 
 const router = useRouter()
 const auth = useAuthStore()
