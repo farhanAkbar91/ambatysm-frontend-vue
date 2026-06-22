@@ -1,6 +1,6 @@
 // Mengambil URL dari environment variable. Jika tidak ada, otomatis fallback ke localhost (untuk lokal)
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
+// Force update build Vercel
 export const ASSET_URL = apiBase;
 export const BASE_URL = `${apiBase}/api`;
 
