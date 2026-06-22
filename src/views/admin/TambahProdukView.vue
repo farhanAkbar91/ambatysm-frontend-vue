@@ -199,7 +199,19 @@ async function saveProduct() {
       body: formData
     })
     
-    const result = await res.json()
+    const responseText = await res.text()
+    const jsonStart = responseText.indexOf('{')
+    const cleanText = jsonStart !== -1 ? responseText.substring(jsonStart) : responseText
+
+    let result = {}
+    try {
+      result = JSON.parse(cleanText)
+    } catch (parseError) {
+      console.error('Response is not valid JSON:', responseText)
+      toast.error('Server Error', `Server returned invalid JSON (Status ${res.status}).`)
+      return
+    }
+
     if (res.ok) {
       toast.success('Berhasil', isEdit.value ? 'Produk berhasil diubah' : 'Produk berhasil ditambahkan')
       router.push('/admin')
@@ -207,7 +219,8 @@ async function saveProduct() {
       toast.error('Gagal', result.message || 'Gagal menyimpan produk')
     }
   } catch (error) {
-    toast.error('Error', 'Terjadi kesalahan jaringan.')
+    console.error('Save product request failed:', error)
+    toast.error('Error', 'Terjadi kesalahan jaringan: ' + error.message)
   }
 }
 </script>

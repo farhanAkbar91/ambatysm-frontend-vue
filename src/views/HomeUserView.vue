@@ -67,7 +67,11 @@ onMounted(async () => {
 })
 
 async function addToCart(productId) {
-  if (!auth.token) { router.push('/login'); return }
+  if (!auth.token) {
+    toast.error('Login Diperlukan', 'Silakan login terlebih dahulu untuk berbelanja.')
+    router.push('/login')
+    return
+  }
   try {
     const res = await fetch(`${BASE_URL}/cart/add`, {
       method: 'POST',

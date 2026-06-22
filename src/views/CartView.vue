@@ -26,7 +26,8 @@
             <span v-if="item.size">Size: {{ item.size }}</span>
             <span v-if="item.size && item.color">|</span>
             <span v-if="item.color" class="d-flex align-items-center gap-1">
-              Warna: <span :style="{ backgroundColor: item.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+              Warna: <span :style="{ backgroundColor: getColorCss(item.color), width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+              <span class="text-uppercase ms-1" style="font-size: 11px;">({{ item.color }})</span>
             </span>
           </div>
           <p class="cart-item__price">{{ formatRupiah(item.product.price) }}</p>
@@ -143,5 +144,20 @@ function goToCheckout() {
   if (selected.length === 0) { alert('Pilih minimal 1 produk untuk checkout.'); return }
   localStorage.setItem('ambatysm_checkout', JSON.stringify(selected))
   router.push('/checkout')
+}
+
+function getColorCss(colorName) {
+  const map = {
+    'hitam': '#111111',
+    'putih': '#ffffff',
+    'abu-abu': '#888888',
+    'merah': '#b12a2a',
+    'biru': '#1d4ed8',
+    'hijau': '#15803d',
+    'kuning': '#eab308',
+    'default': '#cccccc'
+  }
+  const key = String(colorName).toLowerCase();
+  return map[key] || key;
 }
 </script>

@@ -78,7 +78,7 @@ onMounted(async () => {
 
 async function addToCart(productId) {
   if (!auth.token) {
-    alert('Silakan login terlebih dahulu untuk berbelanja.')
+    toast.error('Login Diperlukan', 'Silakan login terlebih dahulu untuk berbelanja.')
     router.push('/login')
     return
   }

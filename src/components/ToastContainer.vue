@@ -1,16 +1,16 @@
 <template>
-  <div class="toast-container">
+  <div class="ambatysm-toast-container">
     <div
       v-for="toast in toasts"
       :key="toast.id"
-      :class="`toast toast--${toast.type}`"
+      :class="`ambatysm-toast ambatysm-toast--${toast.type}`"
     >
-      <span class="toast__icon">{{ icons[toast.type] }}</span>
-      <div class="toast__content">
-        <div class="toast__title">{{ toast.title }}</div>
-        <div class="toast__message">{{ toast.message }}</div>
+      <span class="ambatysm-toast__icon">{{ icons[toast.type] }}</span>
+      <div class="ambatysm-toast__content">
+        <div class="ambatysm-toast__title">{{ toast.title }}</div>
+        <div class="ambatysm-toast__message">{{ toast.message }}</div>
       </div>
-      <button class="toast__close" @click="dismiss(toast.id)">✕</button>
+      <button class="ambatysm-toast__close" @click="dismiss(toast.id)">✕</button>
     </div>
   </div>
 </template>

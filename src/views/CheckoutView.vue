@@ -39,7 +39,8 @@
                 <span v-if="item.size">Size: {{ item.size }}</span>
                 <span v-if="item.size && item.color">|</span>
                 <span v-if="item.color" class="d-flex align-items-center gap-1">
-                  Warna: <span :style="{ backgroundColor: item.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+                  Warna: <span :style="{ backgroundColor: getColorCss(item.color), width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }"></span>
+                  <span class="text-uppercase ms-1" style="font-size: 11px;">({{ item.color }})</span>
                 </span>
               </div>
               <p class="mb-0 text-muted" style="font-size:13px;">{{ formatRupiah(item.product.price) }} x {{ item.quantity }}</p>
@@ -249,7 +250,19 @@ async function submitOrder() {
       headers: { Accept: 'application/json', Authorization: `Bearer ${auth.token}` },
       body: formData
     })
-    const result = await res.json()
+    const responseText = await res.text()
+    const jsonStart = responseText.indexOf('{')
+    const cleanText = jsonStart !== -1 ? responseText.substring(jsonStart) : responseText
+
+    let result = {}
+    try {
+      result = JSON.parse(cleanText)
+    } catch (parseError) {
+      console.error('Response is not valid JSON:', responseText)
+      toast.error('Server Error', `Server returned invalid JSON (Status ${res.status}).`)
+      return
+    }
+
     if (res.ok) {
       toast.success('Berhasil!', 'Pesanan berhasil dibuat!')
       localStorage.removeItem('ambatysm_checkout')
@@ -257,7 +270,25 @@ async function submitOrder() {
     } else {
       toast.error('Checkout Gagal', result.message || 'Cek kembali data pesanan.')
     }
-  } catch { toast.error('Error', 'Terjadi kesalahan sistem.') }
+  } catch (error) {
+    console.error('Checkout failed:', error)
+    toast.error('Error', 'Terjadi kesalahan sistem: ' + error.message)
+  }
   finally { submitting.value = false }
+}
+
+function getColorCss(colorName) {
+  const map = {
+    'hitam': '#111111',
+    'putih': '#ffffff',
+    'abu-abu': '#888888',
+    'merah': '#b12a2a',
+    'biru': '#1d4ed8',
+    'hijau': '#15803d',
+    'kuning': '#eab308',
+    'default': '#cccccc'
+  }
+  const key = String(colorName).toLowerCase();
+  return map[key] || key;
 }
 </script>

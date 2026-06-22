@@ -61,16 +61,16 @@
 
           <!-- Colors -->
           <div class="mb-4">
-            <p style="font-size:13px;color:#555;margin-bottom:10px;">Pilihan Warna:</p>
-            <div class="d-flex gap-2 flex-wrap">
-              <button
+            <p style="font-size:13px;color:#555;margin-bottom:10px;">Pilihan Warna: <span class="fw-bold text-dark text-uppercase font-b612">{{ activeColor }}</span></p>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <div
                 v-for="c in swatchColors"
                 :key="c"
-                class="btn btn-outline-secondary rounded-0 font-b612 text-uppercase"
-                :class="activeColor === c ? 'border-dark text-dark fw-bold' : 'text-muted'"
-                :style="{ padding: '6px 15px', fontSize:'13px', borderColor: activeColor === c ? '#222' : '#ddd' }"
+                class="filter-color-swatch"
+                :class="{ active: activeColor === c }"
+                :style="{ backgroundColor: getColorCss(c), width:'28px', height:'28px', borderRadius:'50%', border:'1px solid #ccc', cursor:'pointer', boxShadow: activeColor === c ? '0 0 0 2px #fff, 0 0 0 3px #111' : '' }"
                 @click="selectColor(c)"
-              >{{ c }}</button>
+              ></div>
             </div>
           </div>
 
@@ -93,6 +93,14 @@
             </div>
           </div>
 
+          <!-- Stock Info -->
+          <div class="mb-4 font-b612" style="font-size: 13px; color: #555;">
+            <span>Stok Tersedia: </span>
+            <span class="fw-bold" :class="selectedVariantStock > 0 ? 'text-success' : 'text-danger'">
+              {{ selectedVariantStock > 0 ? selectedVariantStock + ' pcs' : 'Habis' }}
+            </span>
+          </div>
+
           <!-- Quantity -->
           <div class="mb-4 pt-2">
             <p style="font-size:13px;color:#555;margin-bottom:8px;">Jumlah:</p>
@@ -105,7 +113,7 @@
 
           <!-- Add to Cart -->
           <div class="mb-4 pt-3">
-            <button class="btn w-100 rounded-0 fw-bold pb-3 pt-3 font-b612" @click="addToCart" style="background-color:#ff0000;color:white;font-size:13px;letter-spacing:1.5px;">
+            <button class="btn w-100 rounded-0 fw-bold pb-3 pt-3 font-b612" @click="addToCart" style="background-color:#111111;color:white;font-size:13px;letter-spacing:1.5px;">
               TAMBAH KE KERANJANG
             </button>
           </div>
@@ -200,6 +208,29 @@ const availableSizes = computed(() => {
   return [...new Set(sizes)]
 })
 
+const selectedVariantStock = computed(() => {
+  if (!product.value || !product.value.stocks) return 0
+  const stockRecord = product.value.stocks.find(
+    s => s.color === activeColor.value && s.size === activeSize.value
+  )
+  return stockRecord ? stockRecord.stock : 0
+})
+
+function getColorCss(colorName) {
+  const map = {
+    'hitam': '#111111',
+    'putih': '#ffffff',
+    'abu-abu': '#888888',
+    'merah': '#b12a2a',
+    'biru': '#1d4ed8',
+    'hijau': '#15803d',
+    'kuning': '#eab308',
+    'default': '#cccccc'
+  }
+  const key = String(colorName).toLowerCase();
+  return map[key] || key;
+}
+
 function selectColor(colorName) {
   activeColor.value = colorName
   const sizesForColor = product.value.stocks
@@ -249,6 +280,7 @@ onMounted(async () => {
 
 async function addToCart() {
   if (!auth.token) {
+    toast.error('Login Diperlukan', 'Silakan login terlebih dahulu untuk menambahkan barang ke keranjang.')
     router.push('/login')
     return
   }
