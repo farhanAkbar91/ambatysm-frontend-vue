@@ -96,6 +96,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { apiGetProductDetail, BASE_URL } from '../../composables/api'
 import { useToast } from '../../composables/useToast'
 import { useAuthStore } from '../../stores/auth'
+import { ASSET_URL } from '@/config'
 
 const router = useRouter()
 const route = useRoute()
@@ -129,7 +130,7 @@ onMounted(async () => {
       } else {
         form.variants = [{ size: 'All Size', color: 'Default', stock: product.stock || 0 }]
       }
-      previewImages.value[0] = product.image ? (product.image.startsWith('http') ? product.image : `http://localhost:8000${product.image}`) : null
+      previewImages.value[0] = product.image ? (product.image.startsWith('http') ? product.image : `${ASSET_URL}${product.image}`) : null
     }
   }
 })

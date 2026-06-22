@@ -157,7 +157,7 @@
           </div>
           <div class="product-list" v-if="topProducts.length > 0">
             <div class="product-item" v-for="product in topProducts" :key="product.id" @click="router.push('/admin')">
-              <img :src="product.image ? `http://localhost:8000/storage/${product.image}` : 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&q=80'" :alt="product.name" class="product-img">
+              <img :src="product.image ? `${ASSET_URL}/storage/${product.image}` : 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&q=80'" :alt="product.name" class="product-img">
               <div class="product-info">
                 <div class="product-name">{{ product.name }}</div>
                 <div class="product-meta">
@@ -181,6 +181,7 @@ import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
 import { BASE_URL, formatRupiah } from '../../composables/api'
+import { ASSET_URL } from '@/config'
 
 const router = useRouter()
 const auth = useAuthStore()

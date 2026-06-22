@@ -1,5 +1,8 @@
-export const BASE_URL = 'http://localhost:8000/api'
-export const ASSET_URL = 'http://localhost:8000'
+// Mengambil URL dari environment variable. Jika tidak ada, otomatis fallback ke localhost (untuk lokal)
+const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+export const ASSET_URL = apiBase;
+export const BASE_URL = `${apiBase}/api`;
 
 export function getImageUrl(path) {
   if (!path) return '/assets/kmjputih.jpg'
