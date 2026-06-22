@@ -181,7 +181,6 @@ import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
 import { BASE_URL, ASSET_URL } from '@/composables/api'
-import { ASSET_URL } from '@/config'
 
 const router = useRouter()
 const auth = useAuthStore()

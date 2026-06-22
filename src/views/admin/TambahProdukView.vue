@@ -96,7 +96,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { apiGetProductDetail, BASE_URL } from '../../composables/api'
 import { useToast } from '../../composables/useToast'
 import { useAuthStore } from '../../stores/auth'
-import { ASSET_URL } from '@/config'
+import { ASSET_URL } from '@/composables/api'
 
 const router = useRouter()
 const route = useRoute()
