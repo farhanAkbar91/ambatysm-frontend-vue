@@ -15,8 +15,14 @@
         </div>
         <div class="checkout-recipient__details">
           <input type="text" v-model="address" class="form-control mb-2" placeholder="Masukkan Alamat Lengkap" required style="font-family:'B612',sans-serif;font-size:14px;">
-          <select v-model="selectedCity" class="form-select" style="font-family:'B612',sans-serif;font-size:14px;" @change="checkShipping">
-            <option value="">-- Pilih Kota Tujuan (RajaOngkir) --</option>
+          <select v-model="selectedProvince" class="form-select mb-2" style="font-family:'B612',sans-serif;font-size:14px;" @change="onProvinceChange">
+            <option value="">-- Pilih Provinsi Tujuan --</option>
+            <option v-for="prov in provinces" :key="prov.id" :value="prov.id">
+              {{ prov.name }}
+            </option>
+          </select>
+          <select v-model="selectedCity" class="form-select" style="font-family:'B612',sans-serif;font-size:14px;" :disabled="!selectedProvince" @change="checkShipping">
+            <option value="">-- Pilih Kota/Kabupaten Tujuan --</option>
             <option v-for="city in cities" :key="city.city_id" :value="city.city_id">
               {{ city.type }} {{ city.city_name }}
             </option>
@@ -143,7 +149,9 @@ const router = useRouter()
 const toast = useToast()
 
 const address = ref('')
+const selectedProvince = ref('')
 const selectedCity = ref('')
+const provinces = ref([])
 const cities = ref([])
 const shippingOptions = ref([])
 const selectedShipping = ref(null)
@@ -178,7 +186,7 @@ onMounted(async () => {
   if (checkoutItems.value.length === 0) { toast.error('Keranjang Berubah', 'Produk tidak tersedia.'); router.push('/cart'); return }
 
   loadingItems.value = false
-  await loadCities()
+  await loadProvinces()
 })
 
 async function fetchFreshCart() {
@@ -191,14 +199,37 @@ async function fetchFreshCart() {
   } catch { return [] }
 }
 
-async function loadCities() {
+async function loadProvinces() {
   try {
-    const res = await fetch(`${BASE_URL}/shipping/cities`, {
+    const res = await fetch(`${BASE_URL}/shipping/provinces`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+    const data = await res.json()
+    if (data.data) provinces.value = data.data
+  } catch {}
+}
+
+async function loadCities(provinceId) {
+  try {
+    const url = provinceId
+      ? `${BASE_URL}/shipping/cities?province_id=${provinceId}`
+      : `${BASE_URL}/shipping/cities`
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${auth.token}` }
     })
     const data = await res.json()
     if (data.data) cities.value = data.data
   } catch {}
+}
+
+async function onProvinceChange() {
+  selectedCity.value = ''
+  cities.value = []
+  shippingOptions.value = []
+  selectedShipping.value = null
+  if (selectedProvince.value) {
+    await loadCities(selectedProvince.value)
+  }
 }
 
 async function checkShipping() {
