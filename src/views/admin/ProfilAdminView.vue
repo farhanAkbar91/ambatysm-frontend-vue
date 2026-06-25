@@ -15,11 +15,14 @@
           <i class="bi bi-pencil-square fs-5"></i>
         </button>
         <div class="position-relative d-inline-block mb-3 mt-2">
-          <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; opacity: 0.2;">
+          <div v-if="auth.user?.profile_picture" class="rounded-circle overflow-hidden border" style="width:90px;height:90px;">
+            <img :src="getImageUrl(auth.user.profile_picture)" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div v-else class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; opacity: 0.2;">
             <i class="bi bi-shop text-dark" style="font-size: 3rem;"></i>
           </div>
         </div>
-        <h4 class="font-b612 fw-bold m-0">{{ profile.storeName }}</h4>
+        <h4 class="font-b612 fw-bold m-0">{{ auth.user?.name || 'Store Name' }}</h4>
       </div>
 
       <!-- Alamat Toko -->
@@ -28,7 +31,7 @@
           <i class="bi bi-geo-alt-fill fs-5"></i>
           <h6 class="font-b612 fw-bold mb-0 mt-1">Alamat</h6>
         </div>
-        <p class="text-secondary ms-4 ps-2 mb-0" style="font-size: 14px;">{{ profile.address || 'Belum diatur' }}</p>
+        <p class="text-secondary ms-4 ps-2 mb-0" style="font-size: 14px;">{{ auth.user?.address || 'Belum diatur. Klik icon pensil untuk mengubah.' }}</p>
       </div>
 
       <!-- Dompet -->
@@ -48,11 +51,11 @@
       <div class="bg-white p-4 rounded shadow-sm border">
         <div class="d-flex mb-3">
           <span class="text-secondary d-inline-block" style="width: 70px; font-size: 14px;">No. HP</span>
-          <span style="font-size: 14px;">: <span class="text-decoration-underline ms-1">{{ profile.phone || '-' }}</span></span>
+          <span style="font-size: 14px;">: <span class="text-decoration-underline ms-1">{{ auth.user?.phone || '-' }}</span></span>
         </div>
         <div class="d-flex mb-4">
           <span class="text-secondary d-inline-block" style="width: 70px; font-size: 14px;">Email</span>
-          <span style="font-size: 14px;">: <span class="text-decoration-underline ms-1">{{ profile.email || auth.user?.email || '-' }}</span></span>
+          <span style="font-size: 14px;">: <span class="text-decoration-underline ms-1">{{ auth.user?.email || '-' }}</span></span>
         </div>
         <button class="btn btn-link text-secondary fw-bold text-decoration-underline p-0" style="font-size: 14px;" @click="doLogout">Logout</button>
       </div>
@@ -65,9 +68,21 @@
         <div class="modal-content border-0 shadow">
           <div class="modal-header bg-light">
             <h5 class="modal-title font-b612 fw-bold">Edit Profil Toko</h5>
-            <button type="button" class="btn-close" @click="showEditModal = false"></button>
+            <button type="button" class="btn-close" @click="closeEditModal"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="mb-3 text-center">
+              <label class="form-label font-b612 text-secondary d-block" style="font-size:13px;">Foto / Logo Toko</label>
+              <div class="d-inline-block position-relative mb-2">
+                <div v-if="previewUrl || auth.user?.profile_picture" class="rounded-circle overflow-hidden border" style="width:80px;height:80px;">
+                  <img :src="previewUrl || getImageUrl(auth.user.profile_picture)" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div v-else class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:80px;height:80px;opacity:0.2;">
+                  <i class="bi bi-shop text-dark" style="font-size:2.5rem;"></i>
+                </div>
+              </div>
+              <input type="file" class="form-control form-control-sm" accept="image/*" @change="onFileChange">
+            </div>
             <div class="mb-3">
               <label class="form-label font-b612 text-secondary" style="font-size: 13px;">Nama Toko</label>
               <input type="text" class="form-control" v-model="editForm.storeName">
@@ -86,7 +101,7 @@
             </div>
           </div>
           <div class="modal-footer border-0 pb-4 px-4">
-            <button type="button" class="btn btn-light font-b612 flex-grow-1" @click="showEditModal = false">Batal</button>
+            <button type="button" class="btn btn-light font-b612 flex-grow-1" @click="closeEditModal">Batal</button>
             <button type="button" class="btn btn-dark font-b612 flex-grow-1" @click="saveProfile">Simpan</button>
           </div>
         </div>
@@ -101,7 +116,7 @@
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminBottomNav from '../../components/AdminBottomNav.vue'
-import { formatRupiah } from '../../composables/api'
+import { formatRupiah, getImageUrl, BASE_URL } from '../../composables/api'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
 
@@ -110,25 +125,76 @@ const auth = useAuthStore()
 const toast = useToast()
 
 const profile = reactive({
-  storeName: 'Ambatysm Official',
-  address: 'Jl. Merdeka No. 123, Jakarta Selatan',
-  phone: '081234567890',
-  email: 'admin@ambatysm.com',
   walletBalance: 2500000
 })
 
 const showEditModal = ref(false)
-const editForm = reactive({ ...profile })
+const editForm = reactive({ storeName: '', address: '', phone: '', email: '' })
+const profileFile = ref(null)
+const previewUrl = ref('')
 
-onMounted(() => {
-  // If backend supports fetching profile
-  Object.assign(editForm, profile)
+onMounted(async () => {
+  const user = await auth.fetchUser()
+  if (!user) { router.push('/login'); return }
+  Object.assign(editForm, {
+    storeName: user.name || '',
+    address: user.address || '',
+    phone: user.phone || '',
+    email: user.email || ''
+  })
 })
 
-function saveProfile() {
-  Object.assign(profile, editForm)
-  toast.success('Berhasil', 'Profil toko berhasil diperbarui')
+function onFileChange(e) {
+  const file = e.target.files[0]
+  if (file) {
+    profileFile.value = file
+    previewUrl.value = URL.createObjectURL(file)
+  }
+}
+
+function closeEditModal() {
   showEditModal.value = false
+  profileFile.value = null
+  previewUrl.value = ''
+  Object.assign(editForm, {
+    storeName: auth.user?.name || '',
+    address: auth.user?.address || '',
+    phone: auth.user?.phone || '',
+    email: auth.user?.email || ''
+  })
+}
+
+async function saveProfile() {
+  const formData = new FormData()
+  formData.append('name', editForm.storeName)
+  formData.append('address', editForm.address)
+  formData.append('phone', editForm.phone)
+  formData.append('email', editForm.email)
+  if (profileFile.value) {
+    formData.append('profile_picture', profileFile.value)
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/user/update`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${auth.token}`
+      },
+      body: formData
+    })
+    const result = await res.json()
+    if (res.ok) {
+      toast.success('Berhasil', 'Profil toko berhasil diperbarui.')
+      await auth.fetchUser()
+      closeEditModal()
+    } else {
+      toast.error('Gagal', result.message || 'Gagal memperbarui profil.')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Error', 'Terjadi kesalahan koneksi.')
+  }
 }
 
 function doLogout() {

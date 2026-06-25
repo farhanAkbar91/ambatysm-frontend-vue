@@ -12,7 +12,10 @@
           <i class="bi bi-pencil-square fs-5"></i>
         </a>
         <div class="position-relative d-inline-block mb-3 mt-2">
-          <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:100px;height:100px;opacity:0.2;">
+          <div v-if="user?.profile_picture" class="rounded-circle overflow-hidden border" style="width:100px;height:100px;">
+            <img :src="getImageUrl(user.profile_picture)" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div v-else class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:100px;height:100px;opacity:0.2;">
             <i class="bi bi-person-fill text-dark" style="font-size:4rem;"></i>
           </div>
         </div>
@@ -46,9 +49,21 @@
         <div class="modal-content border-0 shadow">
           <div class="modal-header bg-light">
             <h5 class="modal-title font-b612 fw-bold">Edit Profil</h5>
-            <button type="button" class="btn-close" @click="showEditModal = false"></button>
+            <button type="button" class="btn-close" @click="closeEditModal"></button>
           </div>
           <div class="modal-body p-4">
+            <div class="mb-3 text-center">
+              <label class="form-label font-b612 text-secondary d-block" style="font-size:13px;">Foto Profil</label>
+              <div class="d-inline-block position-relative mb-2">
+                <div v-if="previewUrl || user?.profile_picture" class="rounded-circle overflow-hidden border" style="width:80px;height:80px;">
+                  <img :src="previewUrl || getImageUrl(user.profile_picture)" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div v-else class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:80px;height:80px;opacity:0.2;">
+                  <i class="bi bi-person-fill text-dark" style="font-size:3rem;"></i>
+                </div>
+              </div>
+              <input type="file" class="form-control form-control-sm" accept="image/*" @change="onFileChange">
+            </div>
             <div class="mb-3">
               <label class="form-label font-b612 text-secondary" style="font-size:13px;">Nama Lengkap</label>
               <input type="text" class="form-control" v-model="editForm.name">
@@ -67,7 +82,7 @@
             </div>
           </div>
           <div class="modal-footer border-0 pb-4 px-4">
-            <button class="btn btn-light font-b612 flex-grow-1" @click="showEditModal = false">Batal</button>
+            <button class="btn btn-light font-b612 flex-grow-1" @click="closeEditModal">Batal</button>
             <button class="btn btn-dark font-b612 flex-grow-1" @click="saveProfile">Simpan</button>
           </div>
         </div>
@@ -86,6 +101,7 @@ import BottomNav from '../components/BottomNav.vue'
 import AppFooter from '../components/AppFooter.vue'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from '../composables/useToast'
+import { getImageUrl, BASE_URL } from '../composables/api'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -94,6 +110,8 @@ const toast = useToast()
 const user = ref(null)
 const showEditModal = ref(false)
 const editForm = reactive({ name: '', address: '', phone: '', email: '' })
+const profileFile = ref(null)
+const previewUrl = ref('')
 
 onMounted(async () => {
   user.value = await auth.fetchUser()
@@ -106,11 +124,57 @@ onMounted(async () => {
   })
 })
 
-function saveProfile() {
-  // Mirror values to user display (actual API call can be added)
-  Object.assign(user.value, editForm)
+function onFileChange(e) {
+  const file = e.target.files[0]
+  if (file) {
+    profileFile.value = file
+    previewUrl.value = URL.createObjectURL(file)
+  }
+}
+
+function closeEditModal() {
   showEditModal.value = false
-  toast.success('Berhasil', 'Profil diperbarui.')
+  profileFile.value = null
+  previewUrl.value = ''
+  Object.assign(editForm, {
+    name: user.value?.name || '',
+    address: user.value?.address || '',
+    phone: user.value?.phone || '',
+    email: user.value?.email || ''
+  })
+}
+
+async function saveProfile() {
+  const formData = new FormData()
+  formData.append('name', editForm.name)
+  formData.append('address', editForm.address)
+  formData.append('phone', editForm.phone)
+  formData.append('email', editForm.email)
+  if (profileFile.value) {
+    formData.append('profile_picture', profileFile.value)
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/user/update`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${auth.token}`
+      },
+      body: formData
+    })
+    const result = await res.json()
+    if (res.ok) {
+      toast.success('Berhasil', 'Profil diperbarui.')
+      user.value = await auth.fetchUser()
+      closeEditModal()
+    } else {
+      toast.error('Gagal', result.message || 'Gagal memperbarui profil.')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Error', 'Terjadi kesalahan koneksi.')
+  }
 }
 
 async function handleLogout() {
