@@ -20,8 +20,15 @@
           <i class="bi bi-search fs-5"></i>
         </button>
         <template v-if="isLoggedIn">
-          <router-link to="/cart" class="text-dark text-decoration-none">
+          <router-link to="/cart" class="text-dark text-decoration-none position-relative d-inline-block">
             <i class="bi bi-cart3 fs-4"></i>
+            <span
+              v-if="cartCount > 0"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="font-size: 0.65rem; padding: 0.35em 0.5em; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;"
+            >
+              {{ cartCount }}
+            </span>
           </router-link>
           <router-link to="/profil" class="text-dark text-decoration-none">
             <i class="bi bi-person fs-4"></i>
@@ -129,13 +136,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 import { storeToRefs } from 'pinia'
 
 const auth = useAuthStore()
 const { isLoggedIn } = storeToRefs(auth)
+const cartStore = useCartStore()
+const { cartCount } = storeToRefs(cartStore)
 const router = useRouter()
 
 const showMobileMenu = ref(false)
@@ -149,4 +159,18 @@ function doSearch() {
     searchQuery.value = ''
   }
 }
+
+onMounted(() => {
+  if (isLoggedIn.value) {
+    cartStore.fetchCart()
+  }
+})
+
+watch(isLoggedIn, (newVal) => {
+  if (newVal) {
+    cartStore.fetchCart()
+  } else {
+    cartStore.items = []
+  }
+})
 </script>

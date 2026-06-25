@@ -143,8 +143,10 @@ import AppFooter from '../components/AppFooter.vue'
 import { getImageUrl, formatRupiah, BASE_URL } from '../composables/api'
 import { useToast } from '../composables/useToast'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 
 const auth = useAuthStore()
+const cartStore = useCartStore()
 const router = useRouter()
 const toast = useToast()
 
@@ -297,6 +299,7 @@ async function submitOrder() {
     if (res.ok) {
       toast.success('Berhasil!', 'Pesanan berhasil dibuat!')
       localStorage.removeItem('ambatysm_checkout')
+      cartStore.items = []
       setTimeout(() => router.push('/payment'), 1500)
     } else {
       toast.error('Checkout Gagal', result.message || 'Cek kembali data pesanan.')

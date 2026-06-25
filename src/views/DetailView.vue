@@ -180,10 +180,12 @@ import AppFooter from '../components/AppFooter.vue'
 import { apiGetProductDetail, getImageUrl, formatRupiah, BASE_URL } from '../composables/api'
 import { useToast } from '../composables/useToast'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const cartStore = useCartStore()
 const toast = useToast()
 
 const product = ref(null)
@@ -295,8 +297,12 @@ async function addToCart() {
       body: JSON.stringify({ product_id: product.value.id, quantity: qty.value, size: activeSize.value, color: activeColor.value })
     })
     const result = await res.json()
-    if (res.ok) toast.success('Berhasil', 'Produk ditambahkan ke keranjang!')
-    else toast.error('Gagal', result.message || 'Stok mungkin tidak mencukupi.')
+    if (res.ok) {
+      toast.success('Berhasil', 'Produk ditambahkan ke keranjang!')
+      cartStore.fetchCart()
+    } else {
+      toast.error('Gagal', result.message || 'Stok mungkin tidak mencukupi.')
+    }
   } catch { toast.error('Error', 'Terjadi kesalahan koneksi.') }
 }
 

@@ -156,8 +156,10 @@ import AppFooter from '../components/AppFooter.vue'
 import { getImageUrl, formatRupiah, BASE_URL } from '../composables/api'
 import { useToast } from '../composables/useToast'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 
 const auth = useAuthStore()
+const cartStore = useCartStore()
 const router = useRouter()
 const toast = useToast()
 
@@ -254,6 +256,7 @@ async function saveCartItemEdit() {
       showEditModal.value = false
       loading.value = true
       items.value = await fetchCart()
+      cartStore.items = items.value
       loading.value = false
     } else {
       toast.error('Gagal', result.message || 'Gagal menyimpan perubahan.')
@@ -267,6 +270,7 @@ async function saveCartItemEdit() {
 onMounted(async () => {
   if (!auth.token) { router.push('/login'); return }
   items.value = await fetchCart()
+  cartStore.items = items.value
   loading.value = false
 })
 
@@ -295,8 +299,12 @@ async function updateQty(index, change) {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
       body: JSON.stringify({ quantity: newQty })
     })
-    if (res.ok) item.quantity = newQty
-    else toast.error('Gagal', 'Gagal mengupdate jumlah.')
+    if (res.ok) {
+      item.quantity = newQty
+      cartStore.items = [...items.value]
+    } else {
+      toast.error('Gagal', 'Gagal mengupdate jumlah.')
+    }
   } catch { toast.error('Error', 'Terjadi kesalahan jaringan.') }
 }
 
@@ -309,6 +317,7 @@ async function removeItem(cartId, index) {
     if (res.ok) {
       toast.success('Berhasil', 'Produk dihapus dari keranjang.')
       items.value.splice(index, 1)
+      cartStore.items = [...items.value]
     }
   } catch { toast.error('Gagal', 'Terjadi kesalahan saat menghapus.') }
 }
