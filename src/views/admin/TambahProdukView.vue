@@ -177,6 +177,7 @@ async function saveProduct() {
 
   const formData = new FormData()
   formData.append('name', form.name)
+  formData.append('category', form.category)
   formData.append('price', form.price)
   formData.append('variants', JSON.stringify(form.variants))
   

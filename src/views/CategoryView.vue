@@ -98,12 +98,23 @@ const allProducts = ref([])
 const selectedSize = ref(null)
 const selectedColor = ref(null)
 
-const sizes = ['S', 'M', 'L', 'XL', 'XXL', '40', '41', '42', '43', '44']
+const sizes = ['S', 'M', 'L', 'XL', 'XXL', '28', '30', '32', '34']
 const colors = [
-  { name: 'black', hex: 'black' }, { name: 'blue', hex: 'blue' },
-  { name: 'darkred', hex: 'darkred' }, { name: 'grey', hex: 'grey' },
-  { name: 'green', hex: 'green' }, { name: 'red', hex: 'red' },
-  { name: 'white', hex: 'white' }
+  { name: 'Hitam', hex: '#111111' },
+  { name: 'Putih', hex: '#ffffff' },
+  { name: 'Abu-abu', hex: '#888888' },
+  { name: 'Navy', hex: '#1d2a44' },
+  { name: 'Cream', hex: '#fffdd0' },
+  { name: 'Sage Green', hex: '#b2ac88' },
+  { name: 'Biru Muda', hex: '#add8e6' },
+  { name: 'Olive', hex: '#808000' },
+  { name: 'Maroon', hex: '#800000' },
+  { name: 'Khaki', hex: '#c3b091' },
+  { name: 'Hijau Army', hex: '#4b5320' },
+  { name: 'Cokelat', hex: '#6f4e37' },
+  { name: 'Biru Tua', hex: '#000080' },
+  { name: 'Beige', hex: '#f5f5dc' },
+  { name: 'Merah', hex: '#b12a2a' }
 ]
 
 const titleMap = {
@@ -118,18 +129,38 @@ const categoryTitle = computed(() => titleMap[typeParam.value?.toLowerCase()] ||
 const filtered = computed(() => {
   let list = [...allProducts.value]
 
+  // Filter by category type parameter
   if (typeParam.value && typeParam.value !== 'all' && typeParam.value !== 'new' && typeParam.value !== 'sale') {
-    const keyword = typeParam.value.replace('-', '')
-    list = list.filter(p => p.name.toLowerCase().includes(keyword) || p.name.toLowerCase().includes('shirt') || p.name.toLowerCase().includes('kaos'))
-    if (list.length === 0) list = allProducts.value.slice(0, 4)
+    const type = typeParam.value.toLowerCase()
+    if (type === 'tops') {
+      list = list.filter(p => ['t-shirts', 'shirts', 'outerwear'].includes(p.category?.toLowerCase()))
+    } else if (type === 'bottoms') {
+      list = list.filter(p => ['pants', 'shorts'].includes(p.category?.toLowerCase()))
+    } else {
+      // t-shirts, shirts, outerwear, pants, shorts
+      list = list.filter(p => p.category?.toLowerCase() === type)
+    }
   }
 
+  // Filter by search query parameter
+  const searchParam = route.query.search
+  if (searchParam) {
+    const query = searchParam.toLowerCase()
+    list = list.filter(p => 
+      p.name.toLowerCase().includes(query) || 
+      (p.description && p.description.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query))
+    )
+  }
+
+  // Filter by selected size
   if (selectedSize.value) {
-    list = list.filter(p => (p.id * selectedSize.value.charCodeAt(0)) % 3 !== 0)
+    list = list.filter(p => p.stocks && p.stocks.some(s => s.size === selectedSize.value && s.stock > 0))
   }
 
+  // Filter by selected color
   if (selectedColor.value) {
-    list = list.filter(p => (p.id * selectedColor.value.charCodeAt(0)) % 2 !== 0)
+    list = list.filter(p => p.stocks && p.stocks.some(s => s.color.toLowerCase() === selectedColor.value.toLowerCase() && s.stock > 0))
   }
 
   return list
